@@ -101,7 +101,7 @@ def cull_by_neighbours(candidates, ellipse_threshold):
 	centroid_coords = []
 	candidate_region =[]
 	#find the closest 5 regions to main_region
-	for ind, main_region in enumerate(candidates):
+	for main_region in candidates:
 		if main_region in visited: #Saves time i think lol
 			continue
 		main_centroid = main_region.centroid
@@ -112,10 +112,10 @@ def cull_by_neighbours(candidates, ellipse_threshold):
 			#list the distances to all nodes
 			close_centroid = close_region.centroid
 			distances.append(distance(main_centroid, close_centroid))
+			
 
 		#get indices of the closest 5
-		neighbours = np.argsort(distances)[:5]
-
+		neighbours = np.argsort(distances)[:6] #Fixed doubling up
 		#get their coordinates (and add the current region to complete the set)
 		close_coords = []
 		for region in neighbours:
@@ -130,13 +130,15 @@ def cull_by_neighbours(candidates, ellipse_threshold):
 		#check if largest residual error value is above acceptable threshold
 		if (max(data_residuals) < ellipse_threshold):
 			new_candidates.append(main_region)
-			candidate_array = [ind]
+			candidate_array = []
 			for region in neighbours:
 				new_candidates.append(candidates[region])
 				visited.append(candidates[region])
-				candidate_array.append(region)
+				candidate_array.append(candidates[region])
 			candidate_region.append(candidate_array)
 
+	# for region in candidate_array:
+	# 	print(region.centroid)
 	return np.array(new_candidates), candidate_region
 #TODO fix random region at the bottom
 

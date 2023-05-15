@@ -109,6 +109,8 @@ class ImageGUI:
     def task1(self):
     #load image and get mask by colour
         image = load_image(FILENAME)
+        blurred = cv2.GaussianBlur(image,(11,11),0)
+        coloured = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
         mask = cull_by_colour(image)
 
         #use the mask to label connected regions
@@ -140,20 +142,60 @@ class ImageGUI:
 
 
         #draw boxes over the candidates that survived
-        for region in final_candidates:
-            # take the bounding box from regionprops to draw rectangles
-            min_row, min_col, max_row, max_col = region.bbox
-            rectangles = mpatches.Rectangle((min_col, min_row), max_col - min_col, max_row - min_row, 
-                fill=False, edgecolor='red', linewidth=1)
-            ax.add_patch(rectangles)
-            plt.annotate('lalala', (min_col, min_row), fontsize=10)
+        # for region in final_candidates:
+        #     # take the bounding box from regionprops to draw rectangles
+        #     min_row, min_col, max_row, max_col = region.bbox
+        #     rectangles = mpatches.Rectangle((min_col, min_row), max_col - min_col, max_row - min_row, 
+        #         fill=False, edgecolor='red', linewidth=1)
+        #     ax.add_patch(rectangles)
+        #     plt.annotate('lalala', (min_col, min_row), fontsize=10)
             # tp = TextPath((min_col, min_row), "Test", size=0.4)
             # plt.gca().add_patch(mpatches.PathPatch(tp, color="black"))
 
         for hexagon in candidate_regions:
-            for pointInd in hexagon:
-                if isBlue(final_candidates[pointInd]):
-                    pass
+            top_region = hexagon[0]
+            hexaString = ""
+            sorted_hexagon = []
+            for region in hexagon:
+                totalHue = 0
+                blueCount = 0
+                for x, y in  region.coords:
+                    totalHue += coloured[x,y][0]
+                avgHue = totalHue / len(region.coords)
+                # print(avgHue)
+                if 95 < avgHue and avgHue < 131:
+                    blueCount += 1
+                    if blueCount > 1: # go to next hexagon
+                        break
+                    top_region = region
+
+                    # for x in hexagon:
+                    #     print(x.centroid)
+
+                    sorted_hexagon, hexaString = calculateHexagon(coloured, hexagon, top_region)
+
+            for ind, region in enumerate(sorted_hexagon):
+                min_row, min_col, max_row, max_col = region.bbox
+                rectangles = mpatches.Rectangle((min_col, min_row), max_col - min_col, max_row - min_row, 
+                fill=False, edgecolor='red', linewidth=1)
+                ax.add_patch(rectangles)
+                finString = hexaString + str(ind)
+                plt.annotate(finString, (min_col, min_row), fontsize=10)
+                
+            
+
+                # start = final_candidates[pointInd].coords[0]
+                # end = final_candidates[pointInd].coords[-1]
+                # print(start)
+                # print(end)
+
+                # A = np.mean(image[start[0]:end[0], start[1]:end[1]], axis=(0,1))
+                # print(A)
+
+                
+
+                # if isBlue(final_candidates[pointInd]):
+                #     pass
 
         ax.set_axis_off()
         plt.tight_layout()

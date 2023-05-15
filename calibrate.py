@@ -1,24 +1,20 @@
 #written by Joel Wildman (22984156)
-
 import numpy as np 
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from matplotlib.textpath import TextPath
 import tkinter as tk
 import cv2
 import tkinter.filedialog as filedialog
 from PIL import ImageTk, Image
 import skimage
 import math
-
-
 from skimage import filters, segmentation, measure, morphology, color, util
 
-
-
 #import image
-def load_image():
-	filename = filedialog.askopenfilename()
-	print(filename)
+def load_image(filename):
+	# filename = filedialog.askopenfilename()
+	# print(filename)
 	if (filename == ""):
 		print('Please enter a valid file')
 		exit()
@@ -52,6 +48,7 @@ def cull_by_colour(image):
 
 	#variable to store final mask output
 	final_mask = np.zeros((image.shape[0], image.shape[1]), dtype="uint8")
+	
 
 
 	for target in bounds:
@@ -100,10 +97,13 @@ def cull_by_roundness(candidates, axis_ratio):
 #remove regions that do not form an ellipse with neighbouring regions
 def cull_by_neighbours(candidates, ellipse_threshold):
 	new_candidates = []
-
+	visited = []
 	centroid_coords = []
+	candidate_region =[]
 	#find the closest 5 regions to main_region
-	for main_region in candidates:
+	for ind, main_region in enumerate(candidates):
+		if main_region in visited: #Saves time i think lol
+			continue
 		main_centroid = main_region.centroid
 		centroid_coords.append(main_centroid)
 		distances = []
@@ -120,6 +120,7 @@ def cull_by_neighbours(candidates, ellipse_threshold):
 		close_coords = []
 		for region in neighbours:
 			close_coords.append(candidates[region].centroid)
+			
 
 		#match elipse
 		ellipse = measure.EllipseModel()
@@ -129,52 +130,15 @@ def cull_by_neighbours(candidates, ellipse_threshold):
 		#check if largest residual error value is above acceptable threshold
 		if (max(data_residuals) < ellipse_threshold):
 			new_candidates.append(main_region)
+			candidate_array = [ind]
+			for region in neighbours:
+				new_candidates.append(candidates[region])
+				visited.append(candidates[region])
+				candidate_array.append(region)
+			candidate_region.append(candidate_array)
 
-	return np.array(new_candidates)
-
-
-
-
-#load image and get mask by colour
-image = load_image()
-mask = cull_by_colour(image)
-
-#use the mask to label connected regions
-labelled = measure.label(mask)
+	return np.array(new_candidates), candidate_region
+#TODO fix random region at the bottom
 
 
-#specify values to exclude accidentally labelled objects
-min_area = 30
-max_area = 250
 
-axis_ratio = 0.5
-
-ellipse_threshold = 1
-
-
-#get list of region properties by which to cull bad regions
-current_candidates = measure.regionprops(labelled)
-
-#remove incorrectly identified regions
-current_candidates = cull_by_size(current_candidates, min_area, max_area)
-current_candidates = cull_by_roundness(current_candidates, axis_ratio)
-final_candidates = cull_by_neighbours(current_candidates, ellipse_threshold)
-
-
-#Display labelled regions with colour
-image_label_overlay = color.label2rgb(labelled, image=image, bg_label=0)
-ig, ax = plt.subplots(figsize=(10, 6))
-ax.imshow(image_label_overlay)
-
-
-#draw boxes over the candidates that survived
-for region in final_candidates:
-	# take the bounding box from regionprops to draw rectangles
-	min_row, min_col, max_row, max_col = region.bbox
-	rectangles = mpatches.Rectangle((min_col, min_row), max_col - min_col, max_row - min_row, 
-		fill=False, edgecolor='red', linewidth=1)
-	ax.add_patch(rectangles)
-
-ax.set_axis_off()
-plt.tight_layout()
-plt.show()

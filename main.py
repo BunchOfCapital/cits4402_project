@@ -175,6 +175,9 @@ class ImageGUI:
                     sorted_hexagon, hexaString = calculateHexagon(coloured, hexagon, top_region)
 
             for ind, region in enumerate(sorted_hexagon):
+                x_centre, y_centre = calculate_centroid(region, image)
+                circle = mpatches.Circle((x_centre,y_centre), .5, color = "red", fill = True )
+                ax.add_patch(circle)
                 min_row, min_col, max_row, max_col = region.bbox
                 rectangles = mpatches.Rectangle((min_col, min_row), max_col - min_col, max_row - min_row, 
                 fill=False, edgecolor='red', linewidth=1)

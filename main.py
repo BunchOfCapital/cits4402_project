@@ -118,12 +118,11 @@ class ImageGUI:
 
 
         #specify values to exclude accidentally labelled objects
-        min_area = 30
+        min_area = 10
         max_area = 250
 
-        axis_ratio = 0.5
-
-        ellipse_threshold = 1
+        axis_ratio = 0.1
+        ellipse_threshold = 0.2
 
 
         #get list of region properties by which to cull bad regions

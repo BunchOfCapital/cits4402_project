@@ -1,20 +1,19 @@
 from calibrate import *
+
 def calculateHexagon(image, hexagon, top_region):
-    # green_bounds = ([30, 50, 50], [90, 255, 255])
-    # red_bounds = ([150, 50, 50], [180, 255, 255])
     sorted_hexagon = [top_region] * 6 
     hex_string = [""]*5
-    deepestHex = sorted(hexagon, key=lambda x: x.centroid[0])
+    deepestHex = sorted(hexagon, key=lambda x: x.centroid[0]) #Sorting by y value
     sorted_hexagon[3] = deepestHex[5] #bottom
     finalString = "HexaTarget_"
 
-    for ind in range(1,3):
+    for ind in range(1,3): #Top Left and Top Right
         region = deepestHex[ind]
         if top_region.centroid[1]  < region.centroid[1]:
             sorted_hexagon[1] = region
         else:
             sorted_hexagon[5] = region
-    for ind in range(3,5):
+    for ind in range(3,5): #Bottom Left and Bottom Right
         region = deepestHex[ind]
         if top_region.centroid[1]  < region.centroid[1]:
             sorted_hexagon[2] = region
@@ -26,7 +25,6 @@ def calculateHexagon(image, hexagon, top_region):
         for x, y in  region.coords:
             totalHue += image[x,y][0]
         avgHue = totalHue / len(region.coords)
-        # print(avgHue)
         if 30 < avgHue and avgHue < 95: #Green
             hex_string[ind-1] = 'G'
         elif 130< avgHue and avgHue < 190: #Red
@@ -42,6 +40,7 @@ def calculateHexagon(image, hexagon, top_region):
     return sorted_hexagon, finalString
 
 
+#Code below is as according to formula described in Thesis Extract
 def caculate_weight(point_i,average_intensity , max_i):
     numerator = np.linalg.norm(point_i - average_intensity)
     denominator=   np.linalg.norm(max_i - average_intensity)
@@ -71,6 +70,5 @@ def calculate_centroid(region , image):
         total_point_y += weight * y
     y_centroid = total_point_y / total_weight
     x_centroid = total_point_x/ total_weight
-    #For all p in the dilated E     
 
     return x_centroid, y_centroid

@@ -1,11 +1,11 @@
 from calibrate import *
 from task2 import *
-
+from task3 import *
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 from PIL import ImageTk, Image
-
+import json
 FILENAME = ""
 
 class ImageGUI:
@@ -42,8 +42,8 @@ class ImageGUI:
         self.load_button = tk.Button(self.button_frame, text="Load Image", command=self.display_image)
         self.load_button.pack(side=tk.LEFT, padx=5, pady=5)
         # Create a "Detect Edges" button
-        self.task1 = tk.Button(self.button_frame, text="Task 1", command  = self.task1)
-        self.task1.pack(side=tk.LEFT, padx=5, pady=5)
+        self.task1but = tk.Button(self.button_frame, text="Task 1", command  = self.task1)
+        self.task1but.pack(side=tk.LEFT, padx=5, pady=5)
         # Create a Scale widget for the Edge Detection
         # self.edge_size_var = tk.IntVar()
         # self.edge_scale = tk.Scale(self.button_frame, orient=tk.HORIZONTAL, from_=0.1, to=10.0, resolution=0.1, label="Threshhold for edge detection", variable=self.edge_size_var)
@@ -106,9 +106,9 @@ class ImageGUI:
             self.filtered_label.configure(image=photo)
             self.filtered_label.image = photo
 
-    def task1(self):
+    def task1(self, filename= FILENAME):
     #load image and get mask by colour
-        image = load_image(FILENAME)
+        image = load_image(filename)
         blurred = cv2.GaussianBlur(image,(11,11),0)
         coloured = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
         mask = cull_by_colour(image)
@@ -151,6 +151,8 @@ class ImageGUI:
         #     plt.annotate('lalala', (min_col, min_row), fontsize=10)
             # tp = TextPath((min_col, min_row), "Test", size=0.4)
             # plt.gca().add_patch(mpatches.PathPatch(tp, color="black"))
+        points_coords = []
+        points_strings = []
 
         for hexagon in candidate_regions:
             top_region = hexagon[0]
@@ -184,8 +186,8 @@ class ImageGUI:
                 ax.add_patch(rectangles)
                 finString = hexaString + str(ind)
                 plt.annotate(finString, (min_col, min_row), fontsize=10)
-                
-            
+                points_coords.append([x_centre,y_centre])
+                points_strings.append(finString)
 
                 # start = final_candidates[pointInd].coords[0]
                 # end = final_candidates[pointInd].coords[-1]
@@ -203,9 +205,33 @@ class ImageGUI:
         ax.set_axis_off()
         plt.tight_layout()
         plt.show()         
+        return points_coords, points_strings
+    
+    def main(self):
+        list_of_cameras_images = [("zedLeft720p.json", "camera 11/2022_12_15_15_51_19_927_rgb_left.png"),
+                                ("zedRight720p.json","camera 11/2022_12_15_15_51_19_927_rgb_right.png"),
+                                ("realsense71RGB.json","camera 71/2022_12_15_15_51_19_944_rgb.png"),
+                                ("realsense72RGB.json","camera 72/2022_12_15_15_51_19_956_rgb.png"),
+                                ("realsense73RGB.json","camera 73/2022_12_15_15_51_19_934_rgb.png"),
+                                ("realsense74RGB.json","camera 74/2022_12_15_15_51_19_951_rgb.png")]
+        
+        list_cameras = []
+        for name, image in list_of_cameras_images: 
+            coords, HexStrings = self.task1(image)
+            with open('camera parameters/'+name, 'r') as f:
+                json_read = json.load(f)
+                print(json_read)
+            list_cameras.append([json_read, HexStrings , coords])
+        
+
+        task3(list_cameras)
+
+
+    
+
 
 if __name__ == '__main__':
     root = tk.Tk()
     gui = ImageGUI(root)
+    gui.main()
     root.mainloop()
-    # task1()

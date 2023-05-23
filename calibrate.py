@@ -37,7 +37,7 @@ def cull_by_colour(image):
 
 	#colour boundaries in HSV space:
 	blue_bounds = ([90,50,50], [150, 255, 255])
-	green_bounds = ([30, 50, 50], [90, 255, 255])
+	green_bounds = ([30, 30, 30], [90, 255, 255])
 	red_bounds = ([150, 50, 50], [180, 255, 255])
 
 	#here we can consider true blue to be 120, true green to be 60 and true red to be 180, with a diffcolour of 30
@@ -101,7 +101,7 @@ def cull_by_neighbours(candidates, ellipse_threshold):
 	centroid_coords = []
 	candidate_region =[]
 	#find the closest 5 regions to main_region
-	for main_region in candidates:
+	for i, main_region in enumerate(candidates):
 		if main_region in visited: #Saves time i think lol
 			continue
 		main_centroid = main_region.centroid
@@ -110,6 +110,9 @@ def cull_by_neighbours(candidates, ellipse_threshold):
 
 		for close_region in candidates:
 			#list the distances to all nodes
+			if close_region == 0:
+				distances.append(9999)
+				continue
 			close_centroid = close_region.centroid
 			distances.append(distance(main_centroid, close_centroid))
 			
@@ -136,6 +139,8 @@ def cull_by_neighbours(candidates, ellipse_threshold):
 				visited.append(candidates[region])
 				candidate_array.append(candidates[region])
 			candidate_region.append(candidate_array)
+		else: 
+			candidates[i] = 0
 
 	# for region in candidate_array:
 	# 	print(region.centroid)

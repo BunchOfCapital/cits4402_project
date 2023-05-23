@@ -101,20 +101,20 @@ def task3(list_cameras):
         points = list_cameras[camera_idx][2]
         image_points.append(points)
     for camera_id in range(1, len(list_cameras)):
-        f = list_cameras[camera_id][0]["f"]["val"]
-        cy = list_cameras[camera_id][0]["cy"]["val"]
-        cx = list_cameras[camera_id][0]["cx"]["val"]
+        f = list_cameras[0][0]["f"]["val"]
+        cy = list_cameras[0][0]["cy"]["val"]
+        cx = list_cameras[0][0]["cx"]["val"]
 
-        k1 = list_cameras[camera_id][0]["k1"]["val"]
-        k2 = list_cameras[camera_id][0]["k2"]["val"]
-        k3 = list_cameras[camera_id][0]["k3"]["val"]
-        p1 = list_cameras[camera_id][0]["p1"]["val"]
-        p2 = list_cameras[camera_id][0]["p2"]["val"]
+        k1 = list_cameras[0][0]["k1"]["val"]
+        k2 = list_cameras[0][0]["k2"]["val"]
+        k3 = list_cameras[0][0]["k3"]["val"]
+        p1 = list_cameras[0][0]["p1"]["val"]
+        p2 = list_cameras[0][0]["p2"]["val"]
 
         camera_matrix = np.array([[f, 0, cx], [0, f, cy], [0, 0, 1]], dtype=np.float32)  
         dist_coeffs = np.array([k1, k2, p1, p2, k3], dtype=np.float32) 
         reference_image_points, current_image_points = corresponding_hexagons(list_cameras[0], list_cameras[camera_id])
-        _, rvec, tvec, _ = cv2.solvePnP(reference_image_points, current_image_points, camera_matrix, dist_coeffs)
+        _, rvec, tvec = cv2.solvePnP(reference_image_points, current_image_points, camera_matrix, dist_coeffs, flags= cv2.SOLVEPNP_ITERATIVE)
         rmat, _ = cv2.Rodrigues(rvec)
 
         relative_pose = np.hstack((rmat, tvec))
@@ -144,10 +144,15 @@ def corresponding_hexagons(reference_camera, current_camera):
 
     for ind,name in enumerate(reference_camera[1]):
         if name in current_camera[1]:
+            cind = current_camera[1].index(name)
             reference_image_points.append(reference_camera[2][ind]) 
-            current_image_points.append(current_camera[2][ind])
+            current_image_points.append(current_camera[2][cind])
     reference_image_points = np.array(reference_image_points, dtype=np.float32)
     current_image_points = np.array(current_image_points, dtype=np.float32)
+    print(len(reference_image_points))
+    print(len(current_image_points))
+    print(current_image_points.shape)
+    print(reference_image_points.shape)
     return reference_image_points, current_image_points
 
 

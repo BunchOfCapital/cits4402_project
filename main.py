@@ -176,6 +176,8 @@ class ImageGUI:
                     #     print(x.centroid)
 
                     sorted_hexagon, hexaString = calculateHexagon(coloured, hexagon, top_region)
+            if not sorted_hexagon:
+                continue
 
             for ind, region in enumerate(sorted_hexagon):
                 x_centre, y_centre = calculate_centroid(region, image)
@@ -187,7 +189,7 @@ class ImageGUI:
                 ax.add_patch(rectangles)
                 finString = hexaString + str(ind)
                 plt.annotate(finString, (min_col, min_row), fontsize=10)
-                points_coords.append([x_centre,y_centre])
+                points_coords.append((x_centre,y_centre))
                 points_strings.append(finString)
 
                 # start = final_candidates[pointInd].coords[0]
@@ -221,7 +223,6 @@ class ImageGUI:
             coords, HexStrings = self.task1(image)
             with open('camera parameters/'+name, 'r') as f:
                 json_read = json.load(f)
-                print(json_read)
             list_cameras.append([json_read, HexStrings , coords])
         
 

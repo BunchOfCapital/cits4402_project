@@ -6,14 +6,16 @@ def calculateHexagon(image, hexagon, top_region):
     hex_string = [""]*5
     deepestHex = sorted(hexagon, key=lambda x: x.centroid[0])
     sorted_hexagon[3] = deepestHex[5] #bottom
+    finalString = "HexaTarget_"
+
     for ind in range(1,3):
-        region = hexagon[ind]
+        region = deepestHex[ind]
         if top_region.centroid[1]  < region.centroid[1]:
             sorted_hexagon[1] = region
         else:
             sorted_hexagon[5] = region
     for ind in range(3,5):
-        region = hexagon[ind]
+        region = deepestHex[ind]
         if top_region.centroid[1]  < region.centroid[1]:
             sorted_hexagon[2] = region
         else:
@@ -31,11 +33,11 @@ def calculateHexagon(image, hexagon, top_region):
             hex_string[ind-1] = 'R'
         else:
             hex_string[ind-1] = '?'
-
     
-    finalString = "HexaTarget_"
     for c in hex_string: 
         finalString = finalString+ c
+    if '?' in hex_string:
+        return False, 1
     
     return sorted_hexagon, finalString
 

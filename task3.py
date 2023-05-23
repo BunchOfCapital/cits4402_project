@@ -101,15 +101,15 @@ def task3(list_cameras):
         points = list_cameras[camera_idx][2]
         image_points.append(points)
     for camera_id in range(1, len(list_cameras)):
-        f = list_cameras[camera_id][0]["f"]
-        cy = list_cameras[camera_id][0]["cy"]
-        cx = list_cameras[camera_id][0]["cx"]
+        f = list_cameras[camera_id][0]["f"]["val"]
+        cy = list_cameras[camera_id][0]["cy"]["val"]
+        cx = list_cameras[camera_id][0]["cx"]["val"]
 
-        k1 = list_cameras[camera_id][0]["k1"]
-        k2 = list_cameras[camera_id][0]["k2"]
-        k3 = list_cameras[camera_id][0]["k3"]
-        p1 = list_cameras[camera_id][0]["p1"]
-        p2 = list_cameras[camera_id][0]["p2"]
+        k1 = list_cameras[camera_id][0]["k1"]["val"]
+        k2 = list_cameras[camera_id][0]["k2"]["val"]
+        k3 = list_cameras[camera_id][0]["k3"]["val"]
+        p1 = list_cameras[camera_id][0]["p1"]["val"]
+        p2 = list_cameras[camera_id][0]["p2"]["val"]
 
         camera_matrix = np.array([[f, 0, cx], [0, f, cy], [0, 0, 1]], dtype=np.float32)  
         dist_coeffs = np.array([k1, k2, p1, p2, k3], dtype=np.float32) 
@@ -186,5 +186,5 @@ def plot3d (world_points , camera_poses):
     # Add a legend
     ax.legend()
 
-    # Show the plot
+    # Show the plotg
     plt.show()

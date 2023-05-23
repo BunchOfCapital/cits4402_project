@@ -11,7 +11,7 @@ Firstly, clone this repository onto your local machine.
 git clone https://github.com/BunchOfCapital/cits4402_project.git
 ```
 
-You have now successfully activated your virtual environment. You can now use the package manager [pip](https://pip.pypa.io/en/stable/) to install the required dependencies (contained in 'requirements.txt' file) by running the following command:
+You can now use the package manager [pip](https://pip.pypa.io/en/stable/) to install the required dependencies (contained in 'requirements.txt' file) by running the following command:
 
 ```bash
 python -m pip install -r requirements.txt

@@ -29,7 +29,7 @@ def calculateHexagon(image, hexagon, top_region):
         # print(avgHue)
         if 30 < avgHue and avgHue < 95: #Green
             hex_string[ind-1] = 'G'
-        elif 150< avgHue and avgHue < 180: #Red
+        elif 130< avgHue and avgHue < 190: #Red
             hex_string[ind-1] = 'R'
         else:
             hex_string[ind-1] = '?'

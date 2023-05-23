@@ -44,24 +44,6 @@ class ImageGUI:
         # Create a "Detect Edges" button
         self.task1but = tk.Button(self.button_frame, text="Task 1", command  = self.task1)
         self.task1but.pack(side=tk.LEFT, padx=5, pady=5)
-        # Create a Scale widget for the Edge Detection
-        # self.edge_size_var = tk.IntVar()
-        # self.edge_scale = tk.Scale(self.button_frame, orient=tk.HORIZONTAL, from_=0.1, to=10.0, resolution=0.1, label="Threshhold for edge detection", variable=self.edge_size_var)
-        # self.edge_scale.pack(side=tk.LEFT, padx=5, pady=5)
-        # #Create a frame
-        # self.low_frame = tk.Frame(self.border,borderwidth=2)
-        # self.low_frame.pack(side=tk.TOP,expand=True,padx=10, pady=10)
-
-        # self.algo_variable = tk.StringVar
-        # self.comboBox = ttk.Combobox(self.low_frame, textvariable = self.algo_variable ,values=["Canny", "Prewitt", "Hough"])
-        # self.comboBox.pack(side=tk.LEFT, padx=5, pady=5)
-        # self.comboBox.current(0)
-        # self.comboBox['state'] = 'readonly'
-
-        # # Create a Scale widget for the Circle Radius
-        # self.radius_var = tk.DoubleVar()
-        # self.radius_scale = tk.Scale(self.low_frame, from_=0.1, to=10.0, resolution=0.1, orient=tk.HORIZONTAL, label="Approximate Radius for Circle Detection", variable=self.radius_var)
-        # self.radius_scale.pack(side=tk.RIGHT, padx=5, pady=5)
 
     def display_image(self):
         # Open a file selection dialog box to choose an image file
@@ -106,8 +88,10 @@ class ImageGUI:
             self.filtered_label.configure(image=photo)
             self.filtered_label.image = photo
 
-    def task1(self, filename= FILENAME):
+    def task1(self, filename= False):
     #load image and get mask by colour
+        if not filename:
+            filename = FILENAME
         image = load_image(filename)
         blurred = cv2.GaussianBlur(image,(11,11),0)
         coloured = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
@@ -118,7 +102,7 @@ class ImageGUI:
 
 
         #specify values to exclude accidentally labelled objects
-        min_area = 10
+        min_area = 2
         max_area = 250
 
         axis_ratio = 0.1
@@ -132,14 +116,16 @@ class ImageGUI:
         current_candidates = cull_by_size(current_candidates, min_area, max_area)
         current_candidates = cull_by_roundness(current_candidates, axis_ratio)
         
-        final_candidates, candidate_regions = cull_by_neighbours(current_candidates, ellipse_threshold)
+        final_candidates, candidate_regions = cull_by_neighbours(current_candidates, ellipse_threshold, coloured)
 
 
 
         #Display labelled regions with colour
         image_label_overlay = color.label2rgb(labelled, image=image, bg_label=0)
         ig, ax = plt.subplots(figsize=(10, 6))
-        ax.imshow(image_label_overlay)
+        im_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        ax.imshow(im_rgb)
 
 
         #draw boxes over the candidates that survived
@@ -235,5 +221,5 @@ class ImageGUI:
 if __name__ == '__main__':
     root = tk.Tk()
     gui = ImageGUI(root)
-    gui.main()
+    # gui.main()
     root.mainloop()

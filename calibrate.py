@@ -95,7 +95,7 @@ def cull_by_roundness(candidates, axis_ratio):
 
 
 #remove regions that do not form an ellipse with neighbouring regions
-def cull_by_neighbours(candidates, ellipse_threshold):
+def cull_by_neighbours(candidates, ellipse_threshold, coloured):
 	new_candidates = []
 	visited = []
 	centroid_coords = []
@@ -130,9 +130,12 @@ def cull_by_neighbours(candidates, ellipse_threshold):
 		if (ellipse.estimate(np.array(close_coords))):
 			data_residuals = ellipse.residuals(np.array(close_coords))
 
+		hexagon, HexaString = checkHexagon(coloured, neighbours, candidates) 
+		if not hexagon:
+			continue
 		#check if largest residual error value is above acceptable threshold
 		if (max(data_residuals) < ellipse_threshold):
-			new_candidates.append(main_region)
+			# new_candidates.append(main_region)
 			candidate_array = []
 			for region in neighbours:
 				new_candidates.append(candidates[region])
@@ -145,7 +148,61 @@ def cull_by_neighbours(candidates, ellipse_threshold):
 	# for region in candidate_array:
 	# 	print(region.centroid)
 	return np.array(new_candidates), candidate_region
-#TODO fix random region at the bottom
 
+def checkHexagon(coloured, candidate_List, candidates ):
+	hexagon = []
+	for ind in candidate_List:
+		hexagon.append(candidates[ind])
+    # green_bounds = ([30, 50, 50], [90, 255, 255])
+    # red_bounds = ([150, 50, 50], [180, 255, 255])
+	deepestHex = sorted(hexagon, key=lambda x: x.centroid[0])
+	totalHue = 0
+	for x, y in  deepestHex[0].coords:
+		totalHue += coloured[x,y][0]
+	avgHue = totalHue / len( deepestHex[0].coords)
+	if 85 < avgHue and avgHue < 151:
+		top_region = deepestHex[0]
+	else:
+		return False, 1
+
+	sorted_hexagon = [top_region]*6 
+	sorted_hexagon[3] = deepestHex[5] #bottom
+	finalString = "HexaTarget_"
+	hex_string = [""]*5
+
+	for ind in range(1,3):
+		region = deepestHex[ind]
+		if top_region.centroid[1]  < region.centroid[1]:
+			sorted_hexagon[1] = region
+		else:
+			sorted_hexagon[5] = region
+	for ind in range(3,5):
+		region = deepestHex[ind]
+		if top_region.centroid[1]  < region.centroid[1]:
+			sorted_hexagon[2] = region
+		else:
+			sorted_hexagon[4] = region
+
+	for ind, region in enumerate(sorted_hexagon):
+		totalHue = 0
+		for x, y in  region.coords:
+			totalHue += coloured[x,y][0]
+		avgHue = totalHue / len(region.coords)
+		# print(avgHue)
+		if 30 < avgHue and avgHue < 110: #Green
+			hex_string[ind-1] = 'G'
+		elif 140< avgHue and avgHue < 180: #Red
+			hex_string[ind-1] = 'R'
+		else:
+			hex_string[ind-1] = '?'
+
+
+	for c in hex_string: 
+		finalString = finalString+ c
+
+	if '?' in hex_string:
+		return False, 1
+
+	return sorted_hexagon, finalString
 
 

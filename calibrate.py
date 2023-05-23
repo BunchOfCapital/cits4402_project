@@ -13,8 +13,6 @@ from skimage import filters, segmentation, measure, morphology, color, util
 
 #import image
 def load_image(filename):
-	# filename = filedialog.askopenfilename()
-	# print(filename)
 	if (filename == ""):
 		print('Please enter a valid file')
 		exit()
@@ -28,7 +26,6 @@ def distance(source, dest):
 	xdist = abs(source[0] - dest[0])
 	ydist = abs(source[1] - dest[1])
 	euc_dist = math.sqrt(xdist**2 + ydist**2)
-	#dist = np.linalg.norm(np.array(source) - np.array(dest))
 	return euc_dist
 
 
@@ -117,8 +114,8 @@ def cull_by_neighbours(candidates, ellipse_threshold, coloured):
 			distances.append(distance(main_centroid, close_centroid))
 			
 
-		#get indices of the closest 5
-		neighbours = np.argsort(distances)[:6] #Fixed doubling up
+		#get indices of the closest 5 including itself
+		neighbours = np.argsort(distances)[:6]
 		#get their coordinates (and add the current region to complete the set)
 		close_coords = []
 		for region in neighbours:
@@ -130,6 +127,7 @@ def cull_by_neighbours(candidates, ellipse_threshold, coloured):
 		if (ellipse.estimate(np.array(close_coords))):
 			data_residuals = ellipse.residuals(np.array(close_coords))
 
+		#Check if shape forms a hexagon with red and green colours
 		hexagon, HexaString = checkHexagon(coloured, neighbours, candidates) 
 		if not hexagon:
 			continue
@@ -145,16 +143,13 @@ def cull_by_neighbours(candidates, ellipse_threshold, coloured):
 		else: 
 			candidates[i] = 0
 
-	# for region in candidate_array:
-	# 	print(region.centroid)
 	return np.array(new_candidates), candidate_region
 
+#Preemptively running an extract from the function in TASK 2 to eliminate false detections
 def checkHexagon(coloured, candidate_List, candidates ):
 	hexagon = []
 	for ind in candidate_List:
 		hexagon.append(candidates[ind])
-    # green_bounds = ([30, 50, 50], [90, 255, 255])
-    # red_bounds = ([150, 50, 50], [180, 255, 255])
 	deepestHex = sorted(hexagon, key=lambda x: x.centroid[0])
 	totalHue = 0
 	for x, y in  deepestHex[0].coords:
@@ -188,7 +183,6 @@ def checkHexagon(coloured, candidate_List, candidates ):
 		for x, y in  region.coords:
 			totalHue += coloured[x,y][0]
 		avgHue = totalHue / len(region.coords)
-		# print(avgHue)
 		if 30 < avgHue and avgHue < 110: #Green
 			hex_string[ind-1] = 'G'
 		elif 140< avgHue and avgHue < 180: #Red

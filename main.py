@@ -19,22 +19,15 @@ class ImageGUI:
         self.frame.pack(expand=True, padx=10, pady=10)
         self.frame.grid_rowconfigure(0, weight=1)
         self.frame.grid_columnconfigure(0, weight=1)
-
         # Create a border for the GUI
         self.border = tk.Frame(self.frame, borderwidth=2, relief="groove")
         self.border.grid(row=0, column=0, sticky="nsew")
-
         #Frame for the images
         self.image_frame = tk.Frame(self.border,borderwidth=2, width=900   , height=600)
-        # self.image_frame.grid_propagate(False)
         self.image_frame.pack(side=tk.TOP,expand=True,padx=10, pady=10)
-
         # Create a label to display the chosen image
         self.image_label = tk.Label(self.image_frame)
         self.image_label.pack(side=tk.LEFT, padx=5, pady=5)
-        # Create a label to display the filtered image 
-        self.filtered_label = tk.Label(self.image_frame)
-        self.filtered_label.pack(side=tk.RIGHT, padx=5, pady=5)
         #Create a frame for the buttons
         self.button_frame = tk.Frame(self.border,borderwidth=2, width=700, height=300)
         self.button_frame.pack(side=tk.TOP,expand=True,padx=10, pady=10)
@@ -49,7 +42,7 @@ class ImageGUI:
         self.task2but.pack(side=tk.LEFT, padx=5, pady=5)
         self.task3but = tk.Button(self.button_frame, text="Task 3", command  = lambda: self.task1(task2= True))
         self.task3but.pack(side=tk.LEFT, padx=5, pady=5)
-        
+
     def display_image(self):
         # Open a file selection dialog box to choose an image file
         file_path = filedialog.askopenfilename(title="Select Image File", filetypes=[("Image Files", "*.png;*.jpg;*.jpeg;*.bmp;*.gif")])
@@ -70,31 +63,13 @@ class ImageGUI:
             new_height = max_size
         self.original_image = self.original_image.resize((new_width, new_height))
         
-        # Convert the image to Tkinter format and display it on the left side
+        # Convert the image to Tkinter format and display it 
         photo = ImageTk.PhotoImage(self.original_image)
         self.image_label.configure(image=photo)
         self.image_label.image = photo
 
-
-    # def fit_image(self, new_image):
-    #         # Resize the image to fit in the label
-    #         width, height = new_image.size
-    #         max_size = 900
-    #         if width > height:
-    #             new_width = max_size
-    #             new_height = int(height * (max_size / width))
-    #         else:
-    #             new_width = int(width * (max_size / height))
-    #             new_height = max_size
-    #         new_image = new_image.resize((new_width, new_height))
-            
-    #         # Convert the image to Tkinter format and display it on the right side
-    #         photo = ImageTk.PhotoImage(new_image)
-    #         self.filtered_label.configure(image=photo)
-    #         self.filtered_label.image = photo
-
     def task1(self, filename= False, task2 = False):
-    #load image and get mask by colour
+        #load image and get mask by colour
         if not filename:
             filename = FILENAME
         image = load_image(filename)
@@ -105,11 +80,9 @@ class ImageGUI:
         #use the mask to label connected regions
         labelled = measure.label(mask)
 
-
         #specify values to exclude accidentally labelled objects
         min_area = 2
         max_area = 250
-
         axis_ratio = 0.1
         ellipse_threshold = 0.2
 
@@ -126,27 +99,15 @@ class ImageGUI:
 
 
         #Display labelled regions with colour
-        image_label_overlay = color.label2rgb(labelled, image=image, bg_label=0)
+        # image_label_overlay = color.label2rgb(labelled, image=image, bg_label=0)
         ig, ax = plt.subplots(figsize=(10, 6))
         im_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
         ax.imshow(im_rgb)
-
-
-        #draw boxes over the candidates that survived
-        # for region in final_candidates:
-        #     # take the bounding box from regionprops to draw rectangles
-        #     min_row, min_col, max_row, max_col = region.bbox
-        #     rectangles = mpatches.Rectangle((min_col, min_row), max_col - min_col, max_row - min_row, 
-        #         fill=False, edgecolor='red', linewidth=1)
-        #     ax.add_patch(rectangles)
-        #     plt.annotate('lalala', (min_col, min_row), fontsize=10)
-            # tp = TextPath((min_col, min_row), "Test", size=0.4)
-            # plt.gca().add_patch(mpatches.PathPatch(tp, color="black"))
         points_coords = []
         points_strings = []
 
-        for hexagon in candidate_regions:
+        for hexagon in candidate_regions: 
+            #A hexagon is a group of 6 regions
             top_region = hexagon[0]
             hexaString = ""
             sorted_hexagon = []
@@ -156,55 +117,41 @@ class ImageGUI:
                 for x, y in  region.coords:
                     totalHue += coloured[x,y][0]
                 avgHue = totalHue / len(region.coords)
-                # print(avgHue)
+                
                 if 95 < avgHue and avgHue < 131:
                     blueCount += 1
-                    if blueCount > 1: # go to next hexagon
+                    if blueCount > 1: 
+                    #If there are multiple blue points go to next hexagon
                         break
                     top_region = region
-
-                    # for x in hexagon:
-                    #     print(x.centroid)
-
                     sorted_hexagon, hexaString = calculateHexagon(coloured, hexagon, top_region)
             if not sorted_hexagon:
                 continue
 
             for ind, region in enumerate(sorted_hexagon):
-  
+                #Drawing Rectangles
                 min_row, min_col, max_row, max_col = region.bbox
                 rectangles = mpatches.Rectangle((min_col, min_row), max_col - min_col, max_row - min_row, 
                 fill=False, edgecolor='red', linewidth=1)
                 ax.add_patch(rectangles)
+
                 if task2:
+                    #Drawing Circles
                     x_centre, y_centre = calculate_centroid(region, image)
                     circle = mpatches.Circle((x_centre,y_centre), .5, color = "red", fill = True )
                     ax.add_patch(circle)
+                    #Adding Strings
                     finString = hexaString + str(ind)
                     plt.annotate(finString, (min_col, min_row), fontsize=10)
                     points_coords.append((x_centre,y_centre))
                     points_strings.append(finString)
 
-                # start = final_candidates[pointInd].coords[0]
-                # end = final_candidates[pointInd].coords[-1]
-                # print(start)
-                # print(end)
-
-                # A = np.mean(image[start[0]:end[0], start[1]:end[1]], axis=(0,1))
-                # print(A)
-
-                
-
-                # if isBlue(final_candidates[pointInd]):
-                #     pass
-
         ax.set_axis_off()
         plt.tight_layout()
-        plt.show()         
+        plt.show()  
+
         return points_coords, points_strings
-    
-    def task2_main(self):
-        pass
+
 
     def main(self):
         list_of_cameras_images = [("zedLeft720p.json", "camera 11/2022_12_15_15_51_19_927_rgb_left.png"),

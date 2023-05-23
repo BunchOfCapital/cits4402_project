@@ -2,6 +2,8 @@ from task2 import *
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+
+from scipy.spatial.transform import Rotation as R
 # To implement Task 3, which involves finding the positions of the targets and cameras in the rig using the measured points, you can follow these steps:
 
 # Use the points measured in the previous steps to estimate the relative pose of each target and camera. You can use existing PnP solvers like estworldpose in MATLAB or solvePnP in OpenCV for this task. These functions take the 3D coordinates of the target points and their corresponding 2D projections in the images to estimate the camera pose.
@@ -87,6 +89,24 @@ from mpl_toolkits.mplot3d import Axes3D
 # # from the one that was developed for the work on topographic mapping by Cledat et al., 2020
 # def bundle_adjustment(camera_poses, target_poses, rig_pose):
 #     return camera_poses, target_poses, rig_pose
+def DLT(P1, P2, point1, point2):
+ 
+    A = [point1[1]*P1[2,:] - P1[1,:],
+         P1[0,:] - point1[0]*P1[2,:],
+         point2[1]*P2[2,:] - P2[1,:],
+         P2[0,:] - point2[0]*P2[2,:]
+        ]
+    A = np.array(A).reshape((4,4))
+    #print('A: ')
+    #print(A)
+ 
+    B = A.transpose() @ A
+    from scipy import linalg
+    U, s, Vh = linalg.svd(B, full_matrices = False)
+ 
+    print('Triangulated point: ')
+    print(Vh[3,0:3]/Vh[3,3])
+    return Vh[3,0:3]/Vh[3,3]
 
 def task3(list_cameras):
     #list_camera[camera_id][0] =  configVals 
@@ -101,19 +121,73 @@ def task3(list_cameras):
         points = list_cameras[camera_idx][2]
         image_points.append(points)
     for camera_id in range(1, len(list_cameras)):
-        f = list_cameras[0][0]["f"]["val"]
+        f = list_cameras[0][0]["of"]["val"]
         cy = list_cameras[0][0]["cy"]["val"]
         cx = list_cameras[0][0]["cx"]["val"]
 
-        k1 = list_cameras[0][0]["k1"]["val"]
-        k2 = list_cameras[0][0]["k2"]["val"]
-        k3 = list_cameras[0][0]["k3"]["val"]
-        p1 = list_cameras[0][0]["p1"]["val"]
-        p2 = list_cameras[0][0]["p2"]["val"]
+        k1 = list_cameras[0][0]["ok1"]["val"]
+        k2 = list_cameras[0][0]["ok2"]["val"]
+        k3 = list_cameras[0][0]["ok3"]["val"]
+        p1 = list_cameras[0][0]["op1"]["val"]
+        p2 = list_cameras[0][0]["op2"]["val"]
 
-        camera_matrix = np.array([[f, 0, cx], [0, f, cy], [0, 0, 1]], dtype=np.float32)  
+        ocx = list_cameras[0][0]["ocx"]["val"]
+        ocy = list_cameras[0][0]["ocy"]["val"]
+
+        f2 = list_cameras[1][0]["of"]["val"]
+        cy2 = list_cameras[1][0]["cy"]["val"]
+        cx2 = list_cameras[1][0]["cx"]["val"]
+
+        k1_2 = list_cameras[1][0]["ok1"]["val"]
+        k2_2 = list_cameras[1][0]["ok2"]["val"]
+        k3_2 = list_cameras[1][0]["ok3"]["val"]
+        p1_2 = list_cameras[1][0]["op1"]["val"]
+        p2_2 = list_cameras[1][0]["op2"]["val"]
+
+        ocx2 = list_cameras[1][0]["ocx"]["val"]
+        ocy2 = list_cameras[1][0]["ocy"]["val"]
+
+
+        #a rough manual estimation of the camera intrinsic matrix, without accounting for the distortion.
+        #we don't know how to get the actual camera matrix :(
+
+        camera_matrix = np.array([[f, 0, ocx], [0, f, ocy], [0, 0, 1]], dtype=np.float32)
+        camera2_matrix =   np.array([[f2, 0, ocx2], [0, f2, ocy2], [0, 0, 1]], dtype=np.float32)
         dist_coeffs = np.array([k1, k2, p1, p2, k3], dtype=np.float32) 
         reference_image_points, current_image_points = corresponding_hexagons(list_cameras[0], list_cameras[camera_id])
+
+        cam1_pose = np.concatenate([np.eye(3), [[0],[0],[0]]], axis = -1)
+        print(cam1_pose)
+        cam1_proj_mat = camera_matrix @ cam1_pose
+
+        r1 = R.from_euler('x', 15, degrees=True)
+        r2 = R.from_euler('y', -14, degrees=True)
+        r3 = r2 * r1
+
+        cam2_pose = np.concatenate([r3.as_matrix(), [[50],[5],[0]]], axis = -1)
+        print(cam2_pose)
+        cam2_proj_mat = camera_matrix @ cam2_pose
+
+        p3ds = []
+
+        for uv1, uv2 in zip(current_image_points, reference_image_points):
+            point = DLT(cam1_proj_mat, cam2_proj_mat, uv1, uv2)
+            p3ds.append(point)
+        p3ds = np.array(p3ds)
+
+        fig = plt.figure(figsize=(12, 12))
+        ax = fig.add_subplot(projection='3d')
+
+        ax.scatter(p3ds[:,0], np.zeros(len(p3ds[:,0])), p3ds[:,2], )
+        plt.show()
+
+
+
+
+        #nothing beyond this point works, proceed at your own risk
+
+
+
         _, rvec, tvec = cv2.solvePnP(reference_image_points, current_image_points, camera_matrix, dist_coeffs, flags= cv2.SOLVEPNP_ITERATIVE)
         rmat, _ = cv2.Rodrigues(rvec)
 

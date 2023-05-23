@@ -40,7 +40,7 @@ class ImageGUI:
         # Create a "Task 2" button
         self.task2but = tk.Button(self.button_frame, text="Task 2", command  = lambda: self.task1(task2= True))
         self.task2but.pack(side=tk.LEFT, padx=5, pady=5)
-        self.task3but = tk.Button(self.button_frame, text="Task 3", command  = lambda: self.task1(task2= True))
+        self.task3but = tk.Button(self.button_frame, text="Task 3", command  = self.main)
         self.task3but.pack(side=tk.LEFT, padx=5, pady=5)
 
     def display_image(self):
@@ -163,7 +163,7 @@ class ImageGUI:
         
         list_cameras = []
         for name, image in list_of_cameras_images: 
-            coords, HexStrings = self.task1(image)
+            coords, HexStrings = self.task1(image, task2=True)
             with open('camera parameters/'+name, 'r') as f:
                 json_read = json.load(f)
             list_cameras.append([json_read, HexStrings , coords])

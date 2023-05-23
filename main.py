@@ -141,7 +141,7 @@ class ImageGUI:
                     circle = mpatches.Circle((x_centre,y_centre), .5, color = "red", fill = True )
                     ax.add_patch(circle)
                     #Adding Strings
-                    finString = hexaString + str(ind)
+                    finString = hexaString +"_"+ str(ind+1)
                     plt.annotate(finString, (min_col, min_row), fontsize=10)
                     points_coords.append((x_centre,y_centre))
                     points_strings.append(finString)

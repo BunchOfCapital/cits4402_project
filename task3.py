@@ -151,7 +151,8 @@ def task3(list_cameras):
         #a rough manual estimation of the camera intrinsic matrix, without accounting for the distortion.
         #we don't know how to get the actual camera matrix :(
 
-        camera_matrix = np.array([[f, 0, ocx], [0, f, ocy], [0, 0, 1]], dtype=np.float32)
+
+        camera_matrix = np.array([[3000, 0, ocx], [0, 3000, ocy], [0, 0, 1]], dtype=np.float32)
         camera2_matrix =   np.array([[f2, 0, ocx2], [0, f2, ocy2], [0, 0, 1]], dtype=np.float32)
         dist_coeffs = np.array([k1, k2, p1, p2, k3], dtype=np.float32) 
         reference_image_points, current_image_points = corresponding_hexagons(list_cameras[0], list_cameras[camera_id])
@@ -160,11 +161,11 @@ def task3(list_cameras):
         print(cam1_pose)
         cam1_proj_mat = camera_matrix @ cam1_pose
 
-        r1 = R.from_euler('x', 15, degrees=True)
-        r2 = R.from_euler('y', -14, degrees=True)
+        r1 = R.from_euler('x', 45, degrees=True)
+        r2 = R.from_euler('y', -15, degrees=True)
         r3 = r2 * r1
 
-        cam2_pose = np.concatenate([r3.as_matrix(), [[50],[5],[0]]], axis = -1)
+        cam2_pose = np.concatenate([r3.as_matrix(), [[40],[7],[0]]], axis = -1)
         print(cam2_pose)
         cam2_proj_mat = camera_matrix @ cam2_pose
 
@@ -178,7 +179,7 @@ def task3(list_cameras):
         fig = plt.figure(figsize=(12, 12))
         ax = fig.add_subplot(projection='3d')
 
-        ax.scatter(p3ds[:,0], np.zeros(len(p3ds[:,0])), p3ds[:,2], )
+        ax.scatter(p3ds[:,1], p3ds[:,0],p3ds[:,2] )
         plt.show()
 
 
@@ -188,7 +189,7 @@ def task3(list_cameras):
 
 
 
-        _, rvec, tvec = cv2.solvePnP(reference_image_points, current_image_points, camera_matrix, dist_coeffs, flags= cv2.SOLVEPNP_ITERATIVE)
+        _, rvec, tvec = cv2.solvePnP(p3ds, current_image_points, camera_matrix, dist_coeffs, flags= cv2.SOLVEPNP_ITERATIVE)
         rmat, _ = cv2.Rodrigues(rvec)
 
         relative_pose = np.hstack((rmat, tvec))

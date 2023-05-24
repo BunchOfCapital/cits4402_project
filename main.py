@@ -148,7 +148,7 @@ class ImageGUI:
 
         ax.set_axis_off()
         plt.tight_layout()
-        plt.show()  
+        #plt.show()  
 
         return points_coords, points_strings
 
